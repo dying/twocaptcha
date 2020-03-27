@@ -69,6 +69,73 @@ func (c *TwoCaptchaClient) SolveRecaptchaV2(siteURL, recaptchaKey string) (strin
 	)
 }
 
+// SolvehCaptcha performs a hcaptcha solving request to 2captcha.com
+// and returns with the solved captcha if the request was successful.
+// Valid ApiKey is required.
+// See more details on https://2captcha.com/2captcha-api#solving_hcaptcha
+func (c *TwoCaptchaClient) SolvehCaptcha(siteURL, recaptchaKey string) (string, error) {
+	captchaId, err := c.apiRequest(
+		ApiURL,
+		map[string]string{
+			"sitekey": recaptchaKey,
+			"pageurl": siteURL,
+			"method":  "hcaptcha",
+		},
+		0,
+		3,
+	)
+
+	if err != nil {
+		return "", err
+	}
+
+	return c.apiRequest(
+		ResultURL,
+		map[string]string{
+			"sitekey": recaptchaKey,
+			"pageurl": siteURL,
+			"method":  "hcaptcha",
+			"id":      captchaId,
+			"action":  "get",
+		},
+		5,
+		20,
+	)
+}
+
+func (c *TwoCaptchaClient) SolveFunCaptcha(siteURL, publicKey, sUrl, proxy string) (string, error) {
+	captchaId, err := c.apiRequest(
+		ApiURL,
+		map[string]string{
+			"publickey": publicKey,
+			"surl":      sUrl,
+			"pageurl":   siteURL,
+			"proxy":     proxy,
+			"proxytype": "HTTP",
+			"method":    "funcaptcha",
+		},
+		0,
+		3,
+	)
+
+	if err != nil {
+		return "", err
+	}
+
+	return c.apiRequest(
+		ResultURL,
+		map[string]string{
+			"publickey": publicKey,
+			"pageurl":   siteURL,
+			"method":    "funcaptcha",
+			"id":        captchaId,
+			"action":    "get",
+		},
+		5,
+		20,
+	)
+}
+
 func (c *TwoCaptchaClient) apiRequest(URL string, params map[string]string, delay time.Duration, retries int) (string, error) {
 	if retries <= 0 {
 		return "", errors.New("Maximum retries exceeded")
